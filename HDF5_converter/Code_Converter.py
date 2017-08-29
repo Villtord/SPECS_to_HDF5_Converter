@@ -15,10 +15,28 @@ def converter_function(filename):
     import h5py
     
     
-    def drange(x, y, jump):
-      while x < y:
-        yield float(x)
-        x += jump
+#    def drange(x, y, jump):
+#      while x < y:
+#        yield float(x)
+#        x += jump
+    
+    
+    def unique_names(list_of_names):
+
+        seen=set()
+        i=0
+        j=1 
+        for x in list_of_names:
+            if x not in seen:
+                seen.add(x)
+            else:
+                list_of_names[i]=list_of_names[i]+'_'+str(j)
+                seen.add(list_of_names[i])
+                j+=1
+            
+            i+=1
+        return list_of_names
+   
     
     
     def parse_attribute(string, attributes):
@@ -203,8 +221,12 @@ def converter_function(filename):
             """ Let's cut out max(list_of_shift[range(list_of_Detectors[])]) first and last elements in the data array """
             
             length=len(data_array_detectors)
-            data_array_detectors=np.delete(data_array_detectors,[l for l in range(length-cut_value2,length)])
-            list_data.append(np.delete(data_array_detectors,[l for l in range(cut_value1)]))
+            if (min(cut_ends)<=0):
+                data_array_detectors=np.delete(data_array_detectors,[l for l in range(length-cut_value2,length)])
+            if (max(cut_ends)>=0):
+                data_array_detectors=np.delete(data_array_detectors,[l for l in range(cut_value1)])
+            
+            list_data.append(data_array_detectors)
             j+=list_of_Detectors[i]
         
         else:
@@ -236,7 +258,12 @@ def converter_function(filename):
     f.attrs['h5py_version']     = h5py.version.version
     
     counter=0
-      
+    
+    #   check for similar names in Group_names and Region Names
+    
+    list_of_Group_Names     =   unique_names(list_of_Group_Names)
+    list_of_Region_Names    =   unique_names(list_of_Region_Names)
+    
     #   create the NXentry group
     for i in range (len(list_of_Group_Names)):
         nxgroup = f.create_group(str(list_of_Group_Names[i]))
@@ -248,7 +275,7 @@ def converter_function(filename):
             
             if compact_mode_list[j]!=2:
            
-                ds = nxgroup.create_dataset(str(j)+'_'+str(list_of_Group_Names[i])+'_'+str(list_of_Region_Names[j]), data=list_data[j])
+                ds = nxgroup.create_dataset(str(list_of_Region_Names[j]), data=list_data[j])
                 
                 ds.attrs['Scan_Mode']         = str(list_of_scanmodes[j])
                 ds.attrs['Lens_Mode']         = str(list_of_lens_modes[j])
