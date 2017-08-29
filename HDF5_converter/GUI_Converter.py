@@ -35,12 +35,15 @@ class process_file(QThread):
         super(process_file,self).__init__()
         self.file_list = file_list
     
+    def __del__(self):
+        self.wait()
+   
     def start(self):
-        
-        """ This function will convert the files and emit signals to update History and ProgressBar in main app """            
-        for i in self.file_list:               
+
+        """ This function will convert the files and emit signals to update History and ProgressBar in main app """
+        for i in self.file_list[:-1:]:               
             self.trigger.emit(i)
-            converter_function(i)
+            converter_function(i, self.file_list[-1])
             self.bar_trigger.emit()
 #        self.sleep(1)
         self.f_trigger.emit()
@@ -59,7 +62,7 @@ class ExampleApp(QWidget, Ui_Dialog):
 
         self.btnBrowse.clicked.connect(self.browse_folder)  # When the button is pressed
         self.Convert.clicked.connect(self.convert_files)
-        
+    
         
         """ Here the signals emitted in the thread process_file are translated to functions in the main app"""
         
@@ -95,9 +98,16 @@ class ExampleApp(QWidget, Ui_Dialog):
             self.progressBar.setMaximum(len(filenames_list))
             self.progressBar.setProperty("value", 0)
             
+            if self.Rename.isChecked():
+                flag=True
+            else:
+                flag=False
+                
+            filenames_list.append(flag)
+
             """ Here we start a separate thread which makes all the job and doesn't freeze the main app"""
             self.get_thread = process_file(filenames_list)
-            
+
             self.get_thread.trigger.connect(self.update_history)
             self.get_thread.f_trigger.connect(self.done) 
             self.get_thread.bar_trigger.connect(self.update_bar)

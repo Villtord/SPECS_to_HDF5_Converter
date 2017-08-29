@@ -6,7 +6,7 @@ Created on Fri Jul 21 14:24:17 2017
 This script is intended to transform XML data from SPECSLAb files regarding analyser part
 
 """
-def converter_function(filename):
+def converter_function(filename,rename):
     
     from bs4 import BeautifulSoup
     import numpy as np
@@ -259,10 +259,11 @@ def converter_function(filename):
     
     counter=0
     
-    #   check for similar names in Group_names and Region Names
+    #   Rename similar names in Group_names and Region Names
     
-    list_of_Group_Names     =   unique_names(list_of_Group_Names)
-    list_of_Region_Names    =   unique_names(list_of_Region_Names)
+    if rename==True:
+        list_of_Group_Names     =   unique_names(list_of_Group_Names)
+        list_of_Region_Names    =   unique_names(list_of_Region_Names)
     
     #   create the NXentry group
     for i in range (len(list_of_Group_Names)):
@@ -300,9 +301,9 @@ def converter_function(filename):
                 else:    
         
                     if compact_mode_list[j]==1:
-                        if list_of_lens_modes[j]=='WideAngleMode:3.5kV':
+                        if 'WideAngleMode' in list_of_lens_modes[j]:
                             ds.attrs['IGORWaveScaling'] = [[0,0],[float(wide_angle/int(angular_channels[j])),-wide_angle/2],[float(list_of_dE[j]),float(list_of_KE[j])]]
-                        if list_of_lens_modes[j]=='LowAngleMode:3.5kV':
+                        if 'LowAngleMode' in list_of_lens_modes[j]:
                             ds.attrs['IGORWaveScaling'] = [[0,0],[float(low_angle/int(angular_channels[j])),-low_angle/2],[float(list_of_dE[j]),float(list_of_KE[j])]]
                     
                     
