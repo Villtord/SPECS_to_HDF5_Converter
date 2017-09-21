@@ -11,46 +11,56 @@ end
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Function LoadSpecs ([pathName]) 
-	String pathName
-	String filename
-	
-	if (ParamIsDefault(pathName))
-		pathName=""
-		Prompt pathName, "Enter name of symbolic path if set or leave empty"
-		DoPrompt "Path to data", pathName
-		if(V_Flag)
-			return -1
-		endif
-	endif
-	
-	Variable fileID
-	Variable result=0
-	
-HDF5OpenFile /P=$pathName /R /Z fileID as "" 	// Open HDF5 file selected via dialog 
+Function LoadSpecs () 
 
-if (strlen(S_fileName)>31)
-	filename=S_fileName[0,30]
-endif
+Variable refNum
+Variable fileID
+Variable result=0
+String filename
+String message = "Select one or more files"
+String outputPaths
+String fileFilters = "HDF5 Files (*.h5,*.hdf5):.h5,.hdf5;"
+fileFilters += "All Files:.*;"
 
-NewDataFolder /S root:$filename					// create datafolder according to filename
+Open /D /R /MULT=1 /F=fileFilters /M=message refNum
+outputPaths = S_fileName
 	
-	if (V_flag==0) 
-		Print "loading data ..."
-		HDF5LoadGroup /IGOR=-1 /O /R /TRAN=0 /Z :, fileID, "." // loads 2D/3D matrix of raw data
-		if (V_flag != 0)
+if (strlen(outputPaths) == 0)
+	Print "Cancelled"
+else
+	Variable numFilesSelected = ItemsInList(outputPaths, "\r")
+	Variable i
+		for(i=0; i<numFilesSelected; i+=1)
+			String path = StringFromList(i, outputPaths, "\r")
+			Printf "%d: %s\r", i, path	
+			
+			HDF5OpenFile /R /Z fileID as path 	// Open HDF5 file selected via dialog 
+		
+			if (strlen(S_fileName)>31)
+				filename=S_fileName[0,30]
+			else
+				filename=S_fileName
+			endif
+
+			NewDataFolder /S root:$filename					// create datafolder according to filename
+	
+			if (V_flag==0) 
+				Print "loading data ..."
+				HDF5LoadGroup /IGOR=-1 /O /R /TRAN=0 /Z :, fileID, "." // loads 2D/3D matrix of raw data
+			if (V_flag != 0)
 				HDF5CloseFile fileID // close HDF5 file
 				Abort "HDF5LoadData failed"
 				result = -1
-	endif
-		Print "done!"
-	else
-		Abort "No file selected!"
-	endif
+			endif
+				Print "done!"
+			else
+				Abort "No file selected!"
+			endif
 	
-	HDF5CloseFile fileID // close HDF5 file
-
-end
+			HDF5CloseFile fileID // close HDF5 file
+		endfor
+endif
+End
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////
