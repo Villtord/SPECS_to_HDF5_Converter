@@ -305,6 +305,8 @@ def converter_function(filename,rename):
                             ds.attrs['IGORWaveScaling'] = [[0,0],[float(wide_angle/int(angular_channels[j])),-wide_angle/2],[float(list_of_dE[j]),float(list_of_KE[j])]]
                         if 'LowAngleMode' in list_of_lens_modes[j]:
                             ds.attrs['IGORWaveScaling'] = [[0,0],[float(low_angle/int(angular_channels[j])),-low_angle/2],[float(list_of_dE[j]),float(list_of_KE[j])]]
+                        else:                   # this is the case when there are angular channels but no angular resolved lens mode
+                            ds.attrs['IGORWaveScaling'] = [[0,0],[float(wide_angle/int(angular_channels[j])),-wide_angle/2],[float(list_of_dE[j]),float(list_of_KE[j])]]
                     
                     
                     #Wave_Units=[""+"\0","degree"+"\0","eV"+"\0"]
